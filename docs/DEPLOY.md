@@ -37,7 +37,9 @@ CI runs **only on push to `staging` or `main`**:
 | `ci-staging.yml` | push to `staging` |
 | `ci-main.yml` | push to `main` |
 
-Pipeline: backend-test → frontend-unit → frontend-build → e2e → **ci-success**.
+Linear pipeline (clean graph, one column):
+
+**Backend tests** → **Frontend unit tests** → **Frontend build** → **E2E tests** → **All checks passed**
 
 `feature` pushes do not run CI. Test locally:
 
@@ -50,8 +52,8 @@ cd ../frontend && npm run test:ci
 
 GitHub → **Settings → Branches**:
 
-- **`staging`** → require **CI Staging** / **ci-success**
-- **`main`** → require **CI Main** / **ci-success**
+- **`staging`** → require status check **All checks passed** (workflow: CI Staging)
+- **`main`** → require status check **All checks passed** (workflow: CI Main)
 
 ## Post-deploy checklist
 

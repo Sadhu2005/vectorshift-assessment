@@ -7,5 +7,5 @@ on:
       - main
 
 jobs:
-  ci:
+  pipeline:
     uses: ./.github/workflows/ci-reusable.yml

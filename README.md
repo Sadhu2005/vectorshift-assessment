@@ -107,10 +107,10 @@ npm test
 
 | Branch | Workflow | Status check |
 |--------|----------|--------------|
-| `staging` | `ci-staging.yml` | **CI Staging** → `ci-success` |
-| `main` | `ci-main.yml` | **CI Main** → `ci-success` |
+| `staging` | `ci-staging.yml` | **CI Staging** → **All checks passed** |
+| `main` | `ci-main.yml` | **CI Main** → **All checks passed** |
 
-Enable branch protection and require the matching `ci-success` check before deploy.
+Enable branch protection and require **All checks passed** (under the workflow name) before deploy.
 
 ## Deployment
 
