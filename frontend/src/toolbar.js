@@ -1,60 +1,87 @@
-import { DraggableNode } from './draggableNode';
-import { toolbarNodes } from './nodes/nodeRegistry';
-import { useStore } from './store';
+import { useState, useCallback, useEffect } from 'react';
+import { NodesPanel } from './components/NodesPanel';
+import { TemplatePanel } from './components/TemplatePanel';
 
-const categories = ['Input', 'Transform', 'Output', 'Utility'];
+const tabs = [
+  { id: 'templates', label: 'Templates', icon: '◇' },
+  { id: 'nodes', label: 'Nodes', icon: '▣' },
+];
+
+const MIN_WIDTH = 220;
+const MAX_WIDTH = 480;
+const DEFAULT_WIDTH = 300;
 
 export const PipelineToolbar = () => {
-  const loadPipeline = useStore((s) => s.loadPipeline);
-  const savePipeline = useStore((s) => s.savePipeline);
-  const clearPipeline = useStore((s) => s.clearPipeline);
+  const [activeTab, setActiveTab] = useState('templates');
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const startResize = useCallback((e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const onMove = (e) => {
+      setWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, e.clientX)));
+    };
+    const onUp = () => setIsResizing(false);
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [isResizing]);
 
   return (
-    <aside className="border-b border-slate-800 bg-slate-900 px-4 py-4 shadow-lg">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-white">Pipeline Editor</h1>
-          <p className="text-xs text-slate-400">Drag nodes onto the canvas</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={savePipeline}
-            className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-600"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={loadPipeline}
-            className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-600"
-          >
-            Load
-          </button>
-          <button
-            type="button"
-            onClick={clearPipeline}
-            className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-rose-300 hover:bg-slate-600"
-          >
-            Clear
-          </button>
+    <aside
+      className="relative flex shrink-0 flex-col border-r border-slate-800 bg-slate-900"
+      style={{ width }}
+    >
+      <div className="border-b border-slate-800 px-3 pt-3 pb-2">
+        <div className="flex rounded-lg bg-slate-800 p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition ${
+                activeTab === tab.id
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span className="text-[10px] opacity-80">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {categories.map((category) => (
-        <div key={category} className="mb-4">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {category}
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {toolbarNodes
-              .filter((n) => n.category === category)
-              .map((n) => (
-                <DraggableNode key={n.type} type={n.type} label={n.label} />
-              ))}
-          </div>
-        </div>
-      ))}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {activeTab === 'templates' ? <TemplatePanel /> : <NodesPanel />}
+      </div>
+
+      <p className="shrink-0 border-t border-slate-800 px-3 py-2 text-center text-[10px] text-slate-600">
+        {activeTab === 'templates'
+          ? 'Click template to preview · drag right edge to widen'
+          : 'Click or drag nodes to canvas'}
+      </p>
+
+      {/* Drag to resize sidebar */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        onMouseDown={startResize}
+        className={`absolute top-0 right-0 z-10 h-full w-1.5 cursor-col-resize transition hover:bg-indigo-500/60 ${
+          isResizing ? 'bg-indigo-500' : 'bg-transparent'
+        }`}
+      />
     </aside>
   );
 };

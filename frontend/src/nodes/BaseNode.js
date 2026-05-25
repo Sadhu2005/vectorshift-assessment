@@ -1,5 +1,9 @@
 import { Handle, Position } from 'reactflow';
 import { useStore } from '../store';
+import { NodeDeleteButton } from '../components/NodeDeleteButton';
+import { getFilterConditionHint } from '../utils/filterConditions';
+
+const getFilterHint = getFilterConditionHint;
 
 const accentClasses = {
   emerald: 'border-emerald-400/60 bg-emerald-50',
@@ -42,8 +46,40 @@ export const BaseNode = ({ id, data, config, dynamicHandles = [], width, height 
     updateNodeField(id, name, value);
   };
 
+  const shouldShowField = (field) => {
+    if (!field.showWhen) return true;
+    const depValue = data?.[field.showWhen.field];
+    if (field.showWhen.in) {
+      return field.showWhen.in.includes(depValue);
+    }
+    if (field.showWhen.notIn) {
+      return !field.showWhen.notIn.includes(depValue);
+    }
+    return true;
+  };
+
   const renderField = (field) => {
+    if (!shouldShowField(field)) return null;
+
     const value = data?.[field.name] ?? field.default ?? '';
+
+    if (field.type === 'checkbox') {
+      const checked = Boolean(data?.[field.name] ?? field.default ?? false);
+      return (
+        <label
+          key={field.name}
+          className="flex cursor-pointer items-center gap-2 text-xs text-slate-600"
+        >
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            checked={checked}
+            onChange={(e) => onFieldChange(field.name, e.target.checked)}
+          />
+          <span className="font-medium">{field.label}</span>
+        </label>
+      );
+    }
 
     if (field.type === 'select') {
       return (
@@ -111,7 +147,7 @@ export const BaseNode = ({ id, data, config, dynamicHandles = [], width, height 
 
   return (
     <div
-      className={`relative rounded-lg border-2 shadow-md ${shellClass}`}
+      className={`pipeline-node relative rounded-lg border-2 shadow-md ${shellClass}`}
       style={style}
     >
       {staticHandles.map((h) => (
@@ -136,15 +172,23 @@ export const BaseNode = ({ id, data, config, dynamicHandles = [], width, height 
         />
       ))}
 
-      <div className={`rounded-t-md px-3 py-1.5 text-sm font-semibold text-white ${headerClass}`}>
-        {config.title}
+      <div
+        className={`flex items-center rounded-t-md px-3 py-1.5 text-sm font-semibold text-white ${headerClass}`}
+      >
+        <span>{config.title}</span>
+        <NodeDeleteButton nodeId={id} title={config.title} />
       </div>
 
       <div className="flex flex-col gap-2 px-3 py-2">
         {config.description && (
           <p className="text-xs text-slate-500">{config.description}</p>
         )}
-        {config.fields?.map(renderField)}
+        {config.fields?.map(renderField).filter(Boolean)}
+        {config.title === 'Filter' && data?.condition && (
+          <p className="text-[10px] leading-snug text-amber-700/90">
+            {getFilterHint(data.condition)}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { useStore } from './store';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
-export const SubmitButton = () => {
+export const SubmitButton = ({ inline = false }) => {
   const nodes = useStore((s) => s.nodes);
   const edges = useStore((s) => s.edges);
   const [loading, setLoading] = useState(false);
@@ -43,20 +43,20 @@ export const SubmitButton = () => {
     setError(null);
   };
 
+  const buttonClass = inline
+    ? 'rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50'
+    : 'rounded-lg bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50';
+
   return (
     <>
-      <footer className="border-t border-slate-200 bg-white px-6 py-4 shadow-inner">
-        <div className="flex items-center justify-center">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading || nodes.length === 0}
-            className="rounded-lg bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? 'Validating…' : 'Submit Pipeline'}
-          </button>
-        </div>
-      </footer>
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={loading || nodes.length === 0}
+        className={buttonClass}
+      >
+        {loading ? 'Validating…' : 'Submit'}
+      </button>
 
       {(result || error) && (
         <div
@@ -65,7 +65,7 @@ export const SubmitButton = () => {
           role="presentation"
         >
           <div
-            className="max-w-md w-full rounded-xl bg-white p-6 shadow-2xl"
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-labelledby="result-title"

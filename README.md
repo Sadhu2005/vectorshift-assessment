@@ -1,13 +1,13 @@
-# VectorShift Frontend Assessment
+# Pipeline Editor
 
-A visual pipeline editor built with React Flow and FastAPI. Drag nodes onto the canvas, connect them, and validate the graph (node/edge counts and DAG check) via the backend API.
+Visual workflow builder with React Flow and FastAPI. Design node pipelines on a canvas, save or import graphs, and validate structure (node count, edge count, DAG) via the backend.
 
 ## Repository structure
 
 ```
-├── frontend/     # React (CRA) + React Flow + Zustand + Tailwind
+├── frontend/     # React + React Flow + Zustand + Tailwind
 ├── backend/      # FastAPI — pipeline parse & DAG validation
-├── docs/         # Architecture & interview notes
+├── docs/         # Architecture, deploy guide, sample JSON
 └── README.md
 ```
 
@@ -15,9 +15,9 @@ A visual pipeline editor built with React Flow and FastAPI. Drag nodes onto the 
 
 | Branch | Purpose |
 |--------|---------|
-| `feature` | Active development |
-| `staging` | Integration & preview deploy |
-| `main` | Submission-ready production |
+| `feature` | Development |
+| `staging` | Integration / preview |
+| `main` | Production |
 
 ## Local development
 
@@ -29,7 +29,7 @@ npm install
 npm start
 ```
 
-Runs at [http://localhost:3000](http://localhost:3000).
+http://localhost:3000
 
 ### Backend
 
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-API at [http://localhost:8000](http://localhost:8000).
+http://localhost:8000
 
 ### Environment
 
@@ -49,40 +49,28 @@ Create `frontend/.env`:
 REACT_APP_API_URL=http://localhost:8000
 ```
 
-## Assessment features
+## Features
 
-1. **Node abstraction** — Config-driven `BaseNode` + 5 demo nodes
-2. **Styling** — Tailwind, VectorShift-inspired UI
-3. **Text node** — Auto-resize + `{{variable}}` dynamic handles
-4. **Backend** — `POST /pipelines/parse` → `{ num_nodes, num_edges, is_dag }`
+- Config-driven node abstraction + demo node types
+- Pipeline templates, Save / Load / Export / Import
+- Text node with `{{variable}}` handles and auto-resize
+- `POST /pipelines/parse` → `{ num_nodes, num_edges, is_dag }`
 
 ## Deployment
 
-### Frontend (Vercel)
+**Frontend (Vercel):** root `frontend`, build `npm run build`, env `REACT_APP_API_URL`
 
-- Root directory: `frontend`
-- Build: `npm run build`
-- Output: `build`
-- Env: `REACT_APP_API_URL=<your-render-api-url>`
+**Backend (Render):** root `backend`, start `uvicorn main:app --host 0.0.0.0 --port $PORT`, env `ALLOWED_ORIGINS`
 
-### Backend (Render)
+Details: [docs/DEPLOY.md](docs/DEPLOY.md)
 
-- Root directory: `backend`
-- Build: `pip install -r requirements.txt`
-- Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- Env: `ALLOWED_ORIGINS=https://your-app.vercel.app,http://localhost:3000`
+## Test Import
 
-See [docs/DEPLOY.md](docs/DEPLOY.md) for step-by-step setup.
-
-## Live URLs
-
-| Environment | Frontend | Backend |
-|-------------|----------|---------|
-| Production (`main`) | _Set after Vercel deploy_ | _Set after Render deploy_ |
-| Staging | _Vercel preview branch_ | _Same or staging API_ |
+1. **Import** in the header
+2. Select [docs/examples/sample-pipeline-import.json](docs/examples/sample-pipeline-import.json)
+3. Expect 4 nodes: Input → Text → LLM → Output
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Deploy guide](docs/DEPLOY.md)
-- [Interview script](docs/INTERVIEW_SCRIPT.md)

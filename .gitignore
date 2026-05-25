@@ -13,6 +13,10 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+.cursor/
+
+# Local / instructions (not for repo)
+*.pdf
 
 # Logs
 *.log

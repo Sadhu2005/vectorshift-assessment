@@ -60,19 +60,45 @@ export const nodeConfigs = {
   filter: {
     title: 'Filter',
     accent: 'amber',
-    minWidth: 200,
-    minHeight: 100,
+    minWidth: 220,
+    minHeight: 130,
+    description: 'Keep or drop rows by string rules',
     fields: [
       {
         name: 'condition',
-        label: 'Condition',
+        label: 'Rule',
         type: 'select',
         options: [
           { value: 'contains', label: 'Contains' },
+          { value: 'not_contains', label: 'Does not contain' },
           { value: 'equals', label: 'Equals' },
-          { value: 'regex', label: 'Regex' },
+          { value: 'starts_with', label: 'Starts with' },
+          { value: 'ends_with', label: 'Ends with' },
+          { value: 'regex', label: 'Matches regex' },
+          { value: 'is_empty', label: 'Is empty' },
+          { value: 'is_not_empty', label: 'Is not empty' },
         ],
         default: 'contains',
+      },
+      {
+        name: 'matchValue',
+        label: 'Match value',
+        type: 'text',
+        default: '',
+        showWhen: {
+          field: 'condition',
+          notIn: ['is_empty', 'is_not_empty'],
+        },
+      },
+      {
+        name: 'caseSensitive',
+        label: 'Case sensitive match',
+        type: 'checkbox',
+        default: false,
+        showWhen: {
+          field: 'condition',
+          notIn: ['is_empty', 'is_not_empty', 'regex'],
+        },
       },
     ],
     handles: [

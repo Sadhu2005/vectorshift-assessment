@@ -1,0 +1,83 @@
+{
+  "nodes": [
+    {
+      "id": "customInput-1",
+      "type": "customInput",
+      "position": { "x": 80, "y": 150 },
+      "data": {
+        "id": "customInput-1",
+        "nodeType": "customInput",
+        "inputName": "user_question",
+        "inputType": "Text"
+      }
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "position": { "x": 320, "y": 130 },
+      "data": {
+        "id": "text-1",
+        "nodeType": "text",
+        "text": "Answer this question:\n\n{{input}}",
+        "width": 240,
+        "height": 140
+      }
+    },
+    {
+      "id": "llm-1",
+      "type": "llm",
+      "position": { "x": 600, "y": 150 },
+      "data": {
+        "id": "llm-1",
+        "nodeType": "llm"
+      }
+    },
+    {
+      "id": "customOutput-1",
+      "type": "customOutput",
+      "position": { "x": 860, "y": 150 },
+      "data": {
+        "id": "customOutput-1",
+        "nodeType": "customOutput",
+        "outputName": "answer",
+        "outputType": "Text"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "customInput-1",
+      "target": "text-1",
+      "sourceHandle": "customInput-1-value",
+      "targetHandle": "text-1-var-input",
+      "type": "smoothstep",
+      "animated": true
+    },
+    {
+      "id": "e2",
+      "source": "text-1",
+      "target": "llm-1",
+      "sourceHandle": "text-1-output",
+      "targetHandle": "llm-1-prompt",
+      "type": "smoothstep",
+      "animated": true
+    },
+    {
+      "id": "e3",
+      "source": "llm-1",
+      "target": "customOutput-1",
+      "sourceHandle": "llm-1-response",
+      "targetHandle": "customOutput-1-value",
+      "type": "smoothstep",
+      "animated": true
+    }
+  ],
+  "nodeIDs": {
+    "customInput": 1,
+    "text": 1,
+    "llm": 1,
+    "customOutput": 1
+  },
+  "savedAt": "2026-05-25T12:00:00.000Z"
+}

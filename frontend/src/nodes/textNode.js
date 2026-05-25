@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useStore } from '../store';
+import { NodeDeleteButton } from '../components/NodeDeleteButton';
 
 const VAR_REGEX = /\{\{\s*([a-zA-Z_$][\w$]*)\s*\}\}/g;
 
@@ -57,7 +58,7 @@ export const TextNode = ({ id, data }) => {
 
   return (
     <div
-      className="relative rounded-lg border-2 border-indigo-400/60 bg-indigo-50 shadow-md"
+      className="pipeline-node relative rounded-lg border-2 border-indigo-400/60 bg-indigo-50 shadow-md"
       style={{
         minWidth: 220,
         minHeight: 120,
@@ -83,8 +84,9 @@ export const TextNode = ({ id, data }) => {
         className="!h-3 !w-3 !border-2 !border-white !bg-indigo-500"
       />
 
-      <div className="rounded-t-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white">
-        Text
+      <div className="flex items-center rounded-t-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white">
+        <span>Text</span>
+        <NodeDeleteButton nodeId={id} title="Text" />
       </div>
 
       <div className="flex flex-col gap-1 px-3 py-2">
