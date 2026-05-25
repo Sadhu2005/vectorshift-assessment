@@ -34,8 +34,7 @@ CI runs **only on push to `staging` or `main`**:
 
 | Workflow | Trigger |
 |----------|---------|
-| `ci-staging.yml` | push to `staging` |
-| `ci-main.yml` | push to `main` |
+| `ci.yml` | push to `staging` or `main` |
 
 CI runs unit tests, lint, build, E2E, then deploys to Vercel when secrets are set.
 

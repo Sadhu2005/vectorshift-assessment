@@ -2,7 +2,7 @@
 
 ## CI pipeline overview
 
-On push to **`staging`** or **`main`** only:
+One workflow file: **`.github/workflows/ci.yml`** (runs on push to **`staging`** or **`main`** only).
 
 ```
 Backend tests ──────────────┐
@@ -22,7 +22,7 @@ Backend tests ──────────────────────
 | **Deploy Vercel** | Optional* | Prebuilt deploy to Vercel |
 | **All checks passed** | Gate | Fails if any required job failed |
 
-\*Deploy runs only when Vercel secrets are configured. Tests still run without them.
+\*Deploy runs by default. To skip deploy (no Vercel secrets yet), add GitHub variable `ENABLE_VERCEL_DEPLOY` = `false`.
 
 `feature` branch pushes do **not** run CI.
 
@@ -134,8 +134,8 @@ You can skip GitHub deploy and let Vercel deploy on push by connecting the repo 
 
 | Branch | Required status check |
 |--------|------------------------|
-| `staging` | **All checks passed** (workflow: CI Staging) |
-| `main` | **All checks passed** (workflow: CI Main) |
+| `staging` | **All checks passed** (workflow: CI) |
+| `main` | **All checks passed** (workflow: CI) |
 
 ---
 

@@ -9,7 +9,7 @@ VectorShift-style workflow builder: design node pipelines on a canvas, save or i
 ├── backend/           # FastAPI — pipeline parse & DAG validation
 ├── e2e/               # Playwright API + UI tests
 ├── docs/              # Architecture, deploy guide, sample JSON
-└── .github/workflows/ # CI Staging / CI Main (reusable jobs)
+└── .github/workflows/ # ci.yml (staging + main)
 ```
 
 ## Assessment coverage (VectorShift brief)
@@ -26,10 +26,10 @@ VectorShift-style workflow builder: design node pipelines on a canvas, save or i
 | Branch | Purpose |
 |--------|---------|
 | `feature` | Development — **no CI**; test locally before merge |
-| `staging` | Preview — **CI Staging** runs on push |
-| `main` | Production — **CI Main** runs on push |
+| `staging` | Preview — **CI** runs on push (Vercel preview) |
+| `main` | Production — **CI** runs on push (Vercel production) |
 
-Merge flow: `feature` → `staging` → `main`. Each target branch runs its own CI workflow independently.
+Merge flow: `feature` → `staging` → `main`. One workflow: `.github/workflows/ci.yml`.
 
 ## Local development
 
@@ -105,16 +105,14 @@ npm test
 
 ## CI (GitHub Actions)
 
-| Branch | Workflow | Status check |
-|--------|----------|--------------|
-| `staging` | `ci-staging.yml` | Tests + lint + E2E + Vercel preview deploy |
-| `main` | `ci-main.yml` | Tests + lint + E2E + Vercel production deploy |
+Single workflow **`ci.yml`** on push to `staging` or `main`.
 
-Pipeline: **Backend tests** | **Frontend unit** | **Frontend lint** (parallel) → **Build** → **E2E** → **Deploy Vercel** → **All checks passed**
+| Branch | Vercel | Status check |
+|--------|--------|--------------|
+| `staging` | Preview | **All checks passed** |
+| `main` | Production (`--prod`) | **All checks passed** |
 
-Setup (secrets, variables, Vercel): **[docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md)**
-
-Enable branch protection → require **All checks passed**.
+Setup: **[docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md)**
 
 ## Deployment
 
