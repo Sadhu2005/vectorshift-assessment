@@ -1,6 +1,6 @@
 # Deployment Guide
 
-## Frontend — Vercel (free)
+## Frontend — Vercel
 
 1. Push repo to GitHub.
 2. [vercel.com](https://vercel.com) → New Project → Import repository.
@@ -9,35 +9,69 @@
 5. **Build Command:** `npm run build`
 6. **Output Directory:** `build`
 7. **Environment variables:**
-   - `REACT_APP_API_URL` = your Render API URL (e.g. `https://vectorshift-api.onrender.com`)
-   - Optional staging: `REACT_APP_ENV_LABEL` = `Staging`
+   - `REACT_APP_API_URL` = your Render API URL (e.g. `https://your-api.onrender.com`)
+   - Optional: `REACT_APP_ENV_LABEL` = `Staging` (preview banner)
 8. **Git branch:**
    - `main` → Production
    - `staging` → Preview
 
-## Backend — Render (free)
+## Backend — Render
 
 1. [render.com](https://render.com) → New → Web Service.
 2. Connect GitHub repo.
 3. **Root Directory:** `backend`
-4. **Runtime:** Python 3
+4. **Runtime:** Python 3.11
 5. **Build:** `pip install -r requirements.txt`
 6. **Start:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
 7. **Environment:**
    - `ALLOWED_ORIGINS` = `https://your-app.vercel.app,http://localhost:3000`
 
-Or use Blueprint: `backend/render.yaml`.
+Or deploy via Blueprint: `backend/render.yaml`.
+
+## CI gate (before deploy)
+
+CI runs **only on push to `staging` or `main`**:
+
+| Workflow | Trigger |
+|----------|---------|
+| `ci-staging.yml` | push to `staging` |
+| `ci-main.yml` | push to `main` |
+
+Pipeline: backend-test → frontend-unit → frontend-build → e2e → **ci-success**.
+
+`feature` pushes do not run CI. Test locally:
+
+```bash
+cd backend && pip install -r requirements.txt -r requirements-dev.txt && python -m pytest -v
+cd ../frontend && npm run test:ci
+```
+
+### Branch protection
+
+GitHub → **Settings → Branches**:
+
+- **`staging`** → require **CI Staging** / **ci-success**
+- **`main`** → require **CI Main** / **ci-success**
 
 ## Post-deploy checklist
 
-- [ ] Open Vercel URL — editor loads
-- [ ] Submit pipeline — modal shows counts (no CORS error)
-- [ ] `is_dag: false` when you connect a cycle
-- [ ] Update root `README.md` live URL table
+- [ ] Vercel URL loads the editor
+- [ ] `REACT_APP_API_URL` points to the live Render API
+- [ ] Submit shows a **browser alert** with node count, edge count, and DAG status (no CORS error)
+- [ ] Cycle in the graph → alert shows DAG **No**
+- [ ] Add live URLs to README if required by submission
 
 ## Local parity
 
 ```bash
 # frontend/.env
 REACT_APP_API_URL=http://localhost:8000
+```
+
+```bash
+# terminal 1
+cd backend && python -m uvicorn main:app --reload
+
+# terminal 2
+cd frontend && npm start
 ```

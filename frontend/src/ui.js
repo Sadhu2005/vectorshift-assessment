@@ -96,8 +96,6 @@ const FlowCanvas = () => {
         fitView={nodes.length > 0}
         deleteKeyCode={['Backspace', 'Delete']}
         elementsSelectable
-        nodesDeletable
-        edgesDeletable
         style={{ width: '100%', height: '100%' }}
       >
         <Background color="#94a3b8" gap={gridSize} size={1} />

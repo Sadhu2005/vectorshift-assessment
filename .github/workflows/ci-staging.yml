@@ -1,0 +1,11 @@
+name: CI Staging
+
+# Runs only when code is pushed to staging (e.g. after merging feature → staging).
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci-reusable.yml

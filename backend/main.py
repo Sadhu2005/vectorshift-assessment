@@ -1,8 +1,9 @@
 import json
 import os
+from collections import deque
 from typing import List
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -43,11 +44,11 @@ def is_dag(node_ids: List[str], edges: list) -> bool:
         adj[src].append(tgt)
         in_degree[tgt] = in_degree.get(tgt, 0) + 1
 
-    queue = [n for n in node_set if in_degree[n] == 0]
+    queue = deque(n for n in node_set if in_degree[n] == 0)
     visited = 0
 
     while queue:
-        node = queue.pop(0)
+        node = queue.popleft()
         visited += 1
         for neighbor in adj[node]:
             in_degree[neighbor] -= 1
@@ -64,9 +65,22 @@ def read_root():
 
 @app.post("/pipelines/parse", response_model=ParseResponse)
 def parse_pipeline(pipeline: str = Form(...)):
-    data = json.loads(pipeline)
+    try:
+        data = json.loads(pipeline)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid pipeline JSON")
+
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Pipeline must be a JSON object")
+
     nodes = data.get("nodes", [])
     edges = data.get("edges", [])
+
+    if not isinstance(nodes, list) or not isinstance(edges, list):
+        raise HTTPException(status_code=400, detail="nodes and edges must be arrays")
+
+    if len(nodes) == 0:
+        raise HTTPException(status_code=400, detail="Pipeline must contain at least one node")
 
     node_ids = [n.get("id") for n in nodes if n.get("id")]
     num_nodes = len(nodes)

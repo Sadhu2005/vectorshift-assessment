@@ -26,6 +26,7 @@ flowchart TB
 - `nodeIDs` — per-type counters for unique IDs
 - `updateNodeField` — syncs node `data` from components
 - `getNodeID(type)` — returns e.g. `llm-1`
+- `localStorage` — Save / Load; Export / Import use JSON files
 
 ### Node abstraction (`nodes/`)
 
@@ -36,29 +37,41 @@ flowchart TB
 
 New nodes = add config + registry entry + toolbar item (no copy-paste).
 
+**Demo node types (Part 1):** Filter, Merge, API, Delay, Note (plus original Input, Output, LLM, Text).
+
 ### Text node variables
 
-Regex: `/\{\{\s*([a-zA-Z_$][\w$]*)\s*\}\}/g`
+Regex: `/\{\{\s*([a-zA-Z_$][\w$]*)\s*\}\}/g` in `utils/parseVariables.js`
 
-Unique identifiers → target handles on the left (`id-var-{name}`).
+Unique identifiers → target handles on the left (`{nodeId}-var-{name}`).
 
-### Submit flow
+### Submit flow (Part 4)
 
 1. Serialize `{ nodes, edges }` to JSON
 2. `POST /pipelines/parse` with `FormData` field `pipeline`
-3. Show modal with `num_nodes`, `num_edges`, `is_dag`
+3. On success: **`window.alert()`** with `num_nodes`, `num_edges`, `is_dag` (see `formatPipelineAlert` in `submit.js`)
+4. On failure: centered error modal (backend down, invalid JSON, empty pipeline)
 
 ## Backend
 
 ### `POST /pipelines/parse`
 
 - Accepts `pipeline` form field (JSON string)
+- Validates JSON shape; rejects empty `nodes` with HTTP 400
 - Counts nodes and edges
-- **DAG check:** Kahn's algorithm (topological sort). If processed count < node count → cycle exists.
+- **DAG check:** Kahn's algorithm (`collections.deque`). If visited count < node count → cycle exists
 
 ### CORS
 
 `ALLOWED_ORIGINS` env (comma-separated) for Vercel + localhost.
+
+## Tests
+
+| Layer | Tool | Location |
+|-------|------|----------|
+| Backend unit | pytest | `backend/tests/` |
+| Frontend unit | Jest | `frontend/src/**/*.test.js` |
+| E2E | Playwright | `e2e/tests/` |
 
 ## Deployment split
 

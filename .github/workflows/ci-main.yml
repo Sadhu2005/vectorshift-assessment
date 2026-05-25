@@ -1,0 +1,11 @@
+name: CI Main
+
+# Runs only when code is pushed to main (e.g. after merging staging → main).
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci-reusable.yml

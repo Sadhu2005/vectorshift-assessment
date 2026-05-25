@@ -2,18 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useStore } from '../store';
 import { NodeDeleteButton } from '../components/NodeDeleteButton';
-
-const VAR_REGEX = /\{\{\s*([a-zA-Z_$][\w$]*)\s*\}\}/g;
-
-const parseVariables = (text) => {
-  const names = new Set();
-  let match;
-  const re = new RegExp(VAR_REGEX.source, 'g');
-  while ((match = re.exec(text || '')) !== null) {
-    names.add(match[1]);
-  }
-  return Array.from(names);
-};
+import { parseVariables } from '../utils/parseVariables';
 
 export const TextNode = ({ id, data }) => {
   const updateNodeField = useStore((s) => s.updateNodeField);
