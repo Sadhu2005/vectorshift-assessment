@@ -73,9 +73,11 @@ When Vercel deploys (Git integration or GitHub Action), the **live site** needs 
 |-----|--------|----------------|
 | `REACT_APP_API_URL` | `https://your-api.onrender.com` | **Production** + **Preview** |
 
-5. Save. **Redeploy** after changing this (push to `staging`/`main` or Deployments → Redeploy).
+5. Save, then trigger a **new** deployment (see below).
 
-> **Important:** React bakes `REACT_APP_API_URL` at **build time**. If Submit shows `localhost:8000`, the URL was missing when the app was built. Set the variable above, then run CI again or redeploy.
+> **Important:** React bakes `REACT_APP_API_URL` at **build time**. If Submit shows `localhost:8000`, the URL was missing when the app was built.
+
+> **Prebuilt deploys (CI):** Do **not** use Vercel **Deployments → Redeploy** on a prebuilt deployment — Vercel will warn that env vars are not applied. Instead: **GitHub Actions → CI → Re-run all jobs**, or **Run workflow** (manual), or push to `staging`/`main`.
 
 Your **Environments** page shows:
 
