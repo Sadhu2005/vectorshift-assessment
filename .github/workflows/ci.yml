@@ -68,7 +68,7 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          REACT_APP_API_URL: ${{ github.ref_name == 'main' && vars.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL_STAGING || vars.REACT_APP_API_URL || 'http://localhost:8000' }}
+          REACT_APP_API_URL: ${{ github.ref_name == 'main' && (secrets.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL_PRODUCTION) || (secrets.REACT_APP_API_URL_STAGING || vars.REACT_APP_API_URL_STAGING) || secrets.REACT_APP_API_URL || vars.REACT_APP_API_URL || 'http://localhost:8000' }}
           CI: true
       - uses: actions/upload-artifact@v4
         with:
@@ -132,7 +132,7 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          REACT_APP_API_URL: ${{ github.ref_name == 'main' && vars.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL_STAGING || vars.REACT_APP_API_URL || '' }}
+          REACT_APP_API_URL: ${{ github.ref_name == 'main' && (secrets.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL_PRODUCTION) || (secrets.REACT_APP_API_URL_STAGING || vars.REACT_APP_API_URL_STAGING) || secrets.REACT_APP_API_URL || vars.REACT_APP_API_URL || '' }}
         run: |
           npm install -g vercel@latest
           ENV_NAME="preview"
@@ -152,7 +152,7 @@ jobs:
           fi
           npm ci
           if [ -z "$REACT_APP_API_URL" ] || [ "$REACT_APP_API_URL" = "http://localhost:8000" ]; then
-            echo "::error::REACT_APP_API_URL is missing. Add it in Vercel (Settings → Environment Variables, Production + Preview) and/or GitHub repo Variables (REACT_APP_API_URL_STAGING / REACT_APP_API_URL_PRODUCTION) set to your Render API URL, e.g. https://your-api.onrender.com"
+            echo "::error::REACT_APP_API_URL is missing. Set GitHub Secrets (or Variables): REACT_APP_API_URL_STAGING and REACT_APP_API_URL_PRODUCTION = https://vectorshift-assessment-j2i4.onrender.com (no trailing slash). Vercel Sensitive env vars are not exported by vercel pull — use GitHub Secrets for CI builds."
             exit 1
           fi
           echo "Building frontend with REACT_APP_API_URL=$REACT_APP_API_URL"

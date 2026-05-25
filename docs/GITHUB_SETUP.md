@@ -35,26 +35,28 @@ These are **not** in Vercel. They go in your **GitHub repo** so the **Frontend b
 1. Open your repo on **GitHub** (e.g. `vectorshift-assessment`).
 2. **Settings** (repo settings, not your profile).
 3. Left menu → **Secrets and variables** → **Actions**.
-4. Open the **Variables** tab (next to Secrets).
-5. Click **New repository variable** for each row below.
+4. Use either tab — CI reads **both**:
+   - **Secrets** (recommended for URLs) — **New repository secret**
+   - **Variables** — **New repository variable**
 
-| Variable name | Value (your Render backend URL) | When CI uses it |
-|---------------|----------------------------------|-----------------|
-| `REACT_APP_API_URL_PRODUCTION` | `https://your-api.onrender.com` | Push to **`main`** |
-| `REACT_APP_API_URL_STAGING` | Same URL, or a separate staging API | Push to **`staging`** |
-| `REACT_APP_API_URL` *(optional)* | Fallback if the above are missing | Any branch |
+| Name | Value | When CI uses it |
+|------|--------|-----------------|
+| `REACT_APP_API_URL_PRODUCTION` | `https://vectorshift-assessment-j2i4.onrender.com` | Push to **`main`** |
+| `REACT_APP_API_URL_STAGING` | Same Render URL | Push to **`staging`** |
+| `REACT_APP_API_URL` *(optional)* | Fallback | Any branch |
 
-**Example** (replace with your real Render URL):
+**Example** (no quotes, no trailing slash):
 
 ```
-REACT_APP_API_URL_PRODUCTION = https://vectorshift-pipeline-api.onrender.com
-REACT_APP_API_URL_STAGING    = https://vectorshift-pipeline-api.onrender.com
+REACT_APP_API_URL_PRODUCTION = https://vectorshift-assessment-j2i4.onrender.com
+REACT_APP_API_URL_STAGING    = https://vectorshift-assessment-j2i4.onrender.com
 ```
 
-No quotes in the GitHub UI — paste the URL only.
+> If you already added these under **Secrets** (as in your screenshot), that is correct — push the latest `ci.yml` so CI uses `secrets.*` as well as `vars.*`.
 
-> **Note:** GitHub **Variables** = build-time API URL for Actions.  
-> GitHub **Secrets** = `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (see section 2).
+> **Vercel “Sensitive”** on `REACT_APP_API_URL`: `vercel pull` may **not** export sensitive values. CI relies on GitHub Secrets/Variables for the build URL.
+
+Other GitHub **Secrets**: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (see section 2).
 
 ---
 
@@ -71,7 +73,9 @@ When Vercel deploys (Git integration or GitHub Action), the **live site** needs 
 
 | Key | Value | Environments |
 |-----|--------|----------------|
-| `REACT_APP_API_URL` | `https://your-api.onrender.com` | **Production** + **Preview** |
+| `REACT_APP_API_URL` | `https://vectorshift-assessment-j2i4.onrender.com` | **Production** + **Preview** |
+
+Prefer **not** marking this as Sensitive if you want `vercel pull` in CI to see it; GitHub Secrets are enough for CI builds.
 
 5. Save, then trigger a **new** deployment (see below).
 
