@@ -121,15 +121,17 @@ jobs:
       name: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: frontend-build-${{ github.run_id }}
-          path: frontend/build
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
       - name: Deploy to Vercel
         working-directory: frontend
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          REACT_APP_API_URL: ${{ github.ref_name == 'main' && vars.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL_STAGING || vars.REACT_APP_API_URL || '' }}
         run: |
           npm install -g vercel@latest
           ENV_NAME="preview"
@@ -139,6 +141,13 @@ jobs:
             PROD_FLAG="--prod"
           fi
           vercel pull --yes --environment="$ENV_NAME" --token="${{ secrets.VERCEL_TOKEN }}"
+          npm ci
+          if [ -z "$REACT_APP_API_URL" ] || [ "$REACT_APP_API_URL" = "http://localhost:8000" ]; then
+            echo "::error::Set REACT_APP_API_URL in Vercel Environment Variables (or GitHub vars REACT_APP_API_URL_STAGING / _PRODUCTION) to your Render API URL."
+            exit 1
+          fi
+          echo "Building frontend with REACT_APP_API_URL=$REACT_APP_API_URL"
+          npm run build
           mkdir -p .vercel/output/static
           cp -r build/. .vercel/output/static/
           cat > .vercel/output/config.json <<'EOF'

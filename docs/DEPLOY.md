@@ -15,6 +15,13 @@
    - `main` → Production
    - `staging` → Preview
 
+## Fix “Failed to fetch” / `localhost:8000` on Vercel
+
+1. Deploy backend on Render (below) and get the API URL.
+2. Vercel → **vecter** → **Settings** → **Environment Variables** → add `REACT_APP_API_URL` = `https://YOUR-RENDER-URL.onrender.com` (Production + Preview).
+3. GitHub → **Variables** → `REACT_APP_API_URL_STAGING` and/or `REACT_APP_API_URL_PRODUCTION` = same URL.
+4. Push to `staging` or `main` to trigger CI (rebuilds with correct URL).
+
 ## Backend — Render
 
 1. [render.com](https://render.com) → New → Web Service.

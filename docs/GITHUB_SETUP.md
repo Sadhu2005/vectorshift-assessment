@@ -73,7 +73,9 @@ When Vercel deploys (Git integration or GitHub Action), the **live site** needs 
 |-----|--------|----------------|
 | `REACT_APP_API_URL` | `https://your-api.onrender.com` | **Production** + **Preview** |
 
-5. Save. **Redeploy** if the app was already deployed (Deployments → … → Redeploy).
+5. Save. **Redeploy** after changing this (push to `staging`/`main` or Deployments → Redeploy).
+
+> **Important:** React bakes `REACT_APP_API_URL` at **build time**. If Submit shows `localhost:8000`, the URL was missing when the app was built. Set the variable above, then run CI again or redeploy.
 
 Your **Environments** page shows:
 
@@ -139,7 +141,27 @@ You can skip GitHub deploy and let Vercel deploy on push by connecting the repo 
 
 ---
 
-## 4. Render backend (CORS)
+## 4. Deploy backend on Render (required for Submit)
+
+The frontend on Vercel cannot use `localhost:8000`. Deploy the API first:
+
+1. [render.com](https://render.com) → **New +** → **Web Service** → connect your GitHub repo.
+2. **Root Directory:** `backend`
+3. **Build:** `pip install -r requirements.txt`
+4. **Start:** `python -m uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. **Environment variable:**
+
+| Key | Value |
+|-----|--------|
+| `ALLOWED_ORIGINS` | `https://vecter.vercel.app,https://*.vercel.app,http://localhost:3000` |
+
+6. Deploy and copy your service URL, e.g. `https://vectorshift-pipeline-api.onrender.com`
+7. Paste that URL into **Vercel** `REACT_APP_API_URL` (section 1b) and GitHub variables (section 1).
+8. Push to `staging` or `main` so CI rebuilds and redeploys Vercel.
+
+Test API: open `https://YOUR-RENDER-URL/` → should show `{"Ping":"Pong"}`.
+
+## 5. Render backend (CORS)
 
 On Render, set:
 
@@ -151,7 +173,7 @@ Use your real production domain and preview pattern from Vercel.
 
 ---
 
-## 5. Local commands (match CI)
+## 6. Local commands (match CI)
 
 ```bash
 # Backend unit tests
