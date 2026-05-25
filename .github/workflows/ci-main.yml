@@ -12,3 +12,7 @@ concurrency:
 jobs:
   pipeline:
     uses: ./.github/workflows/ci-reusable.yml
+    secrets: inherit
+    with:
+      vercel-production: true
+      api-url: ${{ vars.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL || 'http://localhost:8000' }}

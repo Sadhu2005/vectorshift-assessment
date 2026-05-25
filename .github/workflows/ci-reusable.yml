@@ -2,10 +2,21 @@ name: CI (reusable)
 
 on:
   workflow_call:
+    inputs:
+      vercel-production:
+        description: 'true = production deploy, false = preview'
+        required: false
+        type: boolean
+        default: false
+      api-url:
+        description: 'REACT_APP_API_URL for frontend build'
+        required: false
+        type: string
+        default: 'http://localhost:8000'
 
 jobs:
-  backend:
-    name: Backend
+  backend-test:
+    name: Backend tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,8 +33,8 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest -v
 
-  frontend:
-    name: Frontend
+  frontend-unit:
+    name: Frontend unit tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,9 +48,42 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run test:ci
+
+  frontend-lint:
+    name: Frontend lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    needs: [frontend-unit, frontend-lint]
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
       - run: npm run build
         env:
-          REACT_APP_API_URL: http://127.0.0.1:8000
+          REACT_APP_API_URL: ${{ inputs.api-url }}
+          CI: true
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-build
@@ -47,9 +91,9 @@ jobs:
           retention-days: 1
 
   e2e:
-    name: E2E
+    name: E2E tests
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [backend-test, frontend-build]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -80,3 +124,62 @@ jobs:
         run: npm run test:ci
         env:
           CI: true
+
+  deploy-vercel:
+    name: Deploy Vercel
+    runs-on: ubuntu-latest
+    needs: [e2e, frontend-build]
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    environment:
+      name: ${{ inputs.vercel-production && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/build
+      - name: Deploy prebuilt to Vercel
+        working-directory: frontend
+        run: |
+          npm install -g vercel@39
+          PROD_FLAG=""
+          if [ "${{ inputs.vercel-production }}" = "true" ]; then
+            PROD_FLAG="--prod"
+          fi
+          vercel deploy build --prebuilt --token "${{ secrets.VERCEL_TOKEN }}" --yes $PROD_FLAG
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  ci-success:
+    name: All checks passed
+    runs-on: ubuntu-latest
+    needs:
+      - backend-test
+      - frontend-unit
+      - frontend-lint
+      - frontend-build
+      - e2e
+      - deploy-vercel
+    if: always()
+    steps:
+      - name: Verify required jobs
+        run: |
+          check() {
+            if [ "$1" != "success" ] && [ "$1" != "skipped" ]; then
+              echo "Job failed: $2 ($1)"
+              exit 1
+            fi
+          }
+          check "${{ needs.backend-test.result }}" "Backend tests"
+          check "${{ needs.frontend-unit.result }}" "Frontend unit tests"
+          check "${{ needs.frontend-lint.result }}" "Frontend lint"
+          check "${{ needs.frontend-build.result }}" "Frontend build"
+          check "${{ needs.e2e.result }}" "E2E tests"
+          # Deploy is optional until Vercel secrets are configured
+          if [ "${{ needs.deploy-vercel.result }}" != "skipped" ]; then
+            check "${{ needs.deploy-vercel.result }}" "Deploy Vercel"
+          else
+            echo "Deploy skipped (add VERCEL_* secrets to enable)."
+          fi
+          echo "All required CI jobs passed."

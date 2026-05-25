@@ -37,27 +37,16 @@ CI runs **only on push to `staging` or `main`**:
 | `ci-staging.yml` | push to `staging` |
 | `ci-main.yml` | push to `main` |
 
-Parallel pipeline (faster, clean Y-shaped graph):
+CI runs unit tests, lint, build, E2E, then deploys to Vercel when secrets are set.
 
-```
-Backend ────┐
-            ├── E2E
-Frontend ───┘   (unit tests + build in one job; build reused via artifact)
-```
+Full GitHub + Vercel configuration: **[GITHUB_SETUP.md](GITHUB_SETUP.md)**
 
 `feature` pushes do not run CI. Test locally:
 
 ```bash
 cd backend && pip install -r requirements.txt -r requirements-dev.txt && python -m pytest -v
-cd ../frontend && npm run test:ci && npm run build
+cd ../frontend && npm ci && npm run test:ci && npm run lint && npm run build
 ```
-
-### Branch protection
-
-GitHub → **Settings → Branches**:
-
-- **`staging`** → require **E2E** (workflow: CI Staging)
-- **`main`** → require **E2E** (workflow: CI Main)
 
 ## Post-deploy checklist
 

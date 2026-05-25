@@ -107,18 +107,14 @@ npm test
 
 | Branch | Workflow | Status check |
 |--------|----------|--------------|
-| `staging` | `ci-staging.yml` | **CI Staging** → require **E2E** job |
-| `main` | `ci-main.yml` | **CI Main** → require **E2E** job |
+| `staging` | `ci-staging.yml` | Tests + lint + E2E + Vercel preview deploy |
+| `main` | `ci-main.yml` | Tests + lint + E2E + Vercel production deploy |
 
-Pipeline graph (parallel, then merge):
+Pipeline: **Backend tests** | **Frontend unit** | **Frontend lint** (parallel) → **Build** → **E2E** → **Deploy Vercel** → **All checks passed**
 
-```
-Backend ────┐
-            ├── E2E
-Frontend ───┘
-```
+Setup (secrets, variables, Vercel): **[docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md)**
 
-Enable branch protection and require the **E2E** status check before deploy.
+Enable branch protection → require **All checks passed**.
 
 ## Deployment
 
@@ -140,3 +136,4 @@ Details: [docs/DEPLOY.md](docs/DEPLOY.md)
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Deploy guide](docs/DEPLOY.md)
+- [GitHub CI & Vercel setup](docs/GITHUB_SETUP.md)
