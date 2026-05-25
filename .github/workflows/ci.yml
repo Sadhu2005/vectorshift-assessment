@@ -11,8 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ── Stage 1: parallel checks (2 branches) ─────────────────────────────
   backend-test:
-    name: Backend tests
+    name: 1 · Backend tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,8 +30,8 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest -v
 
-  frontend-unit:
-    name: Frontend unit tests
+  frontend-quality:
+    name: 1 · Frontend unit & lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,28 +44,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm run test:ci
+      - name: Unit tests
+        run: npm run test:ci
+      - name: Lint
+        run: npm run lint
 
-  frontend-lint:
-    name: Frontend lint
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-
+  # ── Stage 2: build (after frontend quality) ───────────────────────────
   frontend-build:
-    name: Frontend build
+    name: 2 · Frontend build
     runs-on: ubuntu-latest
-    needs: [frontend-unit, frontend-lint]
+    needs: [frontend-quality]
     defaults:
       run:
         working-directory: frontend
@@ -86,8 +75,9 @@ jobs:
           path: frontend/build
           retention-days: 1
 
+  # ── Stage 3: E2E (backend + build must pass) ─────────────────────────
   e2e:
-    name: E2E tests
+    name: 3 · E2E tests
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-build]
     steps:
@@ -121,10 +111,11 @@ jobs:
         env:
           CI: true
 
+  # ── Stage 4: deploy (optional) ──────────────────────────────────────
   deploy-vercel:
-    name: Deploy Vercel
+    name: 4 · Deploy Vercel
     runs-on: ubuntu-latest
-    needs: [e2e, frontend-build]
+    needs: [e2e]
     if: ${{ vars.ENABLE_VERCEL_DEPLOY != 'false' }}
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
@@ -134,47 +125,52 @@ jobs:
         with:
           name: frontend-build-${{ github.run_id }}
           path: frontend/build
-      - name: Deploy prebuilt to Vercel
+      - name: Deploy to Vercel
         working-directory: frontend
-        run: |
-          npm install -g vercel@39
-          PROD_FLAG=""
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            PROD_FLAG="--prod"
-          fi
-          vercel deploy build --prebuilt --token "${{ secrets.VERCEL_TOKEN }}" --yes $PROD_FLAG
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel@39
+          ENV_NAME="preview"
+          PROD_FLAG=""
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            ENV_NAME="production"
+            PROD_FLAG="--prod"
+          fi
+          vercel pull --yes --environment="$ENV_NAME" --token="${{ secrets.VERCEL_TOKEN }}"
+          mkdir -p .vercel/output/static
+          cp -r build/. .vercel/output/static/
+          cat > .vercel/output/config.json <<'EOF'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/(.*)", "dest": "/index.html" }
+            ]
+          }
+          EOF
+          vercel deploy --prebuilt --yes --token="${{ secrets.VERCEL_TOKEN }}" $PROD_FLAG
 
+  # ── Stage 5: gate (single dependency = clean graph) ─────────────────
   ci-success:
-    name: All checks passed
+    name: 5 · All checks passed
     runs-on: ubuntu-latest
-    needs:
-      - backend-test
-      - frontend-unit
-      - frontend-lint
-      - frontend-build
-      - e2e
-      - deploy-vercel
+    needs: [deploy-vercel, e2e]
     if: always()
     steps:
-      - name: Verify required jobs
+      - name: Pipeline gate
         run: |
-          check() {
-            if [ "$1" != "success" ] && [ "$1" != "skipped" ]; then
-              echo "Job failed: $2 ($1)"
-              exit 1
-            fi
-          }
-          check "${{ needs.backend-test.result }}" "Backend tests"
-          check "${{ needs.frontend-unit.result }}" "Frontend unit tests"
-          check "${{ needs.frontend-lint.result }}" "Frontend lint"
-          check "${{ needs.frontend-build.result }}" "Frontend build"
-          check "${{ needs.e2e.result }}" "E2E tests"
-          if [ "${{ needs.deploy-vercel.result }}" != "skipped" ]; then
-            check "${{ needs.deploy-vercel.result }}" "Deploy Vercel"
-          else
-            echo "Deploy skipped (set ENABLE_VERCEL_DEPLOY=false or add VERCEL_* secrets)."
+          if [ "${{ needs.e2e.result }}" != "success" ]; then
+            echo "::error::E2E did not pass (${{ needs.e2e.result }}). Upstream tests or build failed."
+            exit 1
           fi
-          echo "All required CI jobs passed."
+          if [ "${{ needs.deploy-vercel.result }}" == "failure" ]; then
+            echo "::error::Vercel deploy failed."
+            exit 1
+          fi
+          if [ "${{ needs.deploy-vercel.result }}" == "success" ]; then
+            echo "All checks passed — deployed to Vercel."
+          else
+            echo "All checks passed — deploy skipped (ENABLE_VERCEL_DEPLOY=false or no secrets)."
+          fi

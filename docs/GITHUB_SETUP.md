@@ -5,11 +5,9 @@
 One workflow file: **`.github/workflows/ci.yml`** (runs on push to **`staging`** or **`main`** only).
 
 ```
-Backend tests ──────────────┐
-Frontend unit tests ──┐     │
-Frontend lint ────────┼── Frontend build ──┼── E2E ── Deploy Vercel ── All checks passed
-                      └─────┘                │
-Backend tests ───────────────────────────────┘
+1 · Backend tests ──────┐
+1 · Frontend unit&lint ─┼── 2 · Build ──┼── 3 · E2E ── 4 · Deploy ── 5 · All passed
+                        └───────────────┘
 ```
 
 | Job | Required? | What it runs |
@@ -112,6 +110,8 @@ cat .vercel/project.json
 ```
 
 Add all three secrets to GitHub. After that, **Deploy Vercel** runs automatically after E2E passes.
+
+CI reuses the CRA `build/` artifact, packs it into `.vercel/output` (required by `vercel deploy --prebuilt`), then deploys.
 
 ### Vercel project settings (one-time)
 
