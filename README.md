@@ -107,10 +107,18 @@ npm test
 
 | Branch | Workflow | Status check |
 |--------|----------|--------------|
-| `staging` | `ci-staging.yml` | **CI Staging** → **All checks passed** |
-| `main` | `ci-main.yml` | **CI Main** → **All checks passed** |
+| `staging` | `ci-staging.yml` | **CI Staging** → require **E2E** job |
+| `main` | `ci-main.yml` | **CI Main** → require **E2E** job |
 
-Enable branch protection and require **All checks passed** (under the workflow name) before deploy.
+Pipeline graph (parallel, then merge):
+
+```
+Backend ────┐
+            ├── E2E
+Frontend ───┘
+```
+
+Enable branch protection and require the **E2E** status check before deploy.
 
 ## Deployment
 

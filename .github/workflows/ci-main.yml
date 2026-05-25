@@ -1,10 +1,13 @@
 name: CI Main
 
-# Runs only when code is pushed to main (e.g. after merging staging → main).
 on:
   push:
     branches:
       - main
+
+concurrency:
+  group: ci-main-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pipeline:

@@ -1,10 +1,13 @@
 name: CI Staging
 
-# Runs only when code is pushed to staging (e.g. after merging feature → staging).
 on:
   push:
     branches:
       - staging
+
+concurrency:
+  group: ci-staging-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pipeline:

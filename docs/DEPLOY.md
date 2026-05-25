@@ -37,23 +37,27 @@ CI runs **only on push to `staging` or `main`**:
 | `ci-staging.yml` | push to `staging` |
 | `ci-main.yml` | push to `main` |
 
-Linear pipeline (clean graph, one column):
+Parallel pipeline (faster, clean Y-shaped graph):
 
-**Backend tests** → **Frontend unit tests** → **Frontend build** → **E2E tests** → **All checks passed**
+```
+Backend ────┐
+            ├── E2E
+Frontend ───┘   (unit tests + build in one job; build reused via artifact)
+```
 
 `feature` pushes do not run CI. Test locally:
 
 ```bash
 cd backend && pip install -r requirements.txt -r requirements-dev.txt && python -m pytest -v
-cd ../frontend && npm run test:ci
+cd ../frontend && npm run test:ci && npm run build
 ```
 
 ### Branch protection
 
 GitHub → **Settings → Branches**:
 
-- **`staging`** → require status check **All checks passed** (workflow: CI Staging)
-- **`main`** → require status check **All checks passed** (workflow: CI Main)
+- **`staging`** → require **E2E** (workflow: CI Staging)
+- **`main`** → require **E2E** (workflow: CI Main)
 
 ## Post-deploy checklist
 
