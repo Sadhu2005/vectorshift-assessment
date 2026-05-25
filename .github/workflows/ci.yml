@@ -141,9 +141,17 @@ jobs:
             PROD_FLAG="--prod"
           fi
           vercel pull --yes --environment="$ENV_NAME" --token="${{ secrets.VERCEL_TOKEN }}"
+          VERCEL_ENV_FILE=".vercel/.env.${ENV_NAME}.local"
+          if [ -f "$VERCEL_ENV_FILE" ]; then
+            VERCEL_API_URL=$(grep -E '^REACT_APP_API_URL=' "$VERCEL_ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+            if [ -n "$VERCEL_API_URL" ] && { [ -z "$REACT_APP_API_URL" ] || [ "$REACT_APP_API_URL" = "http://localhost:8000" ]; }; then
+              REACT_APP_API_URL="$VERCEL_API_URL"
+              export REACT_APP_API_URL
+            fi
+          fi
           npm ci
           if [ -z "$REACT_APP_API_URL" ] || [ "$REACT_APP_API_URL" = "http://localhost:8000" ]; then
-            echo "::error::Set REACT_APP_API_URL in Vercel Environment Variables (or GitHub vars REACT_APP_API_URL_STAGING / _PRODUCTION) to your Render API URL."
+            echo "::error::REACT_APP_API_URL is missing. Add it in Vercel (Settings → Environment Variables, Production + Preview) and/or GitHub repo Variables (REACT_APP_API_URL_STAGING / REACT_APP_API_URL_PRODUCTION) set to your Render API URL, e.g. https://your-api.onrender.com"
             exit 1
           fi
           echo "Building frontend with REACT_APP_API_URL=$REACT_APP_API_URL"
