@@ -1,5 +1,5 @@
 import { createNodeComponent } from './createNodeComponent';
-import { TextNode } from './TextNode';
+import { TextNode } from './textNode';
 import { nodeConfigs } from './nodeConfigs';
 
 const configTypes = Object.keys(nodeConfigs);
