@@ -131,7 +131,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          npm install -g vercel@39
+          npm install -g vercel@latest
           ENV_NAME="preview"
           PROD_FLAG=""
           if [ "${{ github.ref_name }}" = "main" ]; then
