@@ -3,7 +3,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from main import app, is_dag
+from main import app, is_dag, parse_cors_config
 
 client = TestClient(app)
 
@@ -47,6 +47,29 @@ class TestIsDag:
 
     def test_dangling_edge_target_ignored(self):
         assert is_dag(["A"], [{"source": "A", "target": "ghost"}]) is True
+
+
+class TestCorsConfig:
+    def test_wildcard_becomes_regex(self):
+        origins, regex = parse_cors_config(
+            "http://localhost:3000,https://*.vercel.app"
+        )
+        assert origins == ["http://localhost:3000"]
+        assert regex == r"^https://.*\.vercel\.app$"
+
+    def test_cors_preflight_allows_vercel_preview(self):
+        response = client.options(
+            "/pipelines/parse",
+            headers={
+                "Origin": "https://vecter-gzcanju4l-sadhu2005s-projects.vercel.app",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+        assert response.status_code == 200
+        assert (
+            response.headers.get("access-control-allow-origin")
+            == "https://vecter-gzcanju4l-sadhu2005s-projects.vercel.app"
+        )
 
 
 class TestHealth:

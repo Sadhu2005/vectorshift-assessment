@@ -1,7 +1,8 @@
 import json
 import os
+import re
 from collections import deque
-from typing import List
+from typing import List, Optional, Tuple
 
 from fastapi import FastAPI, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,12 +10,36 @@ from pydantic import BaseModel
 
 app = FastAPI(title="VectorShift Pipeline API")
 
-default_origins = "http://localhost:3000,http://127.0.0.1:3000"
-allowed_origins = os.getenv("ALLOWED_ORIGINS", default_origins).split(",")
+default_origins = (
+    "http://localhost:3000,"
+    "http://127.0.0.1:3000,"
+    "https://*.vercel.app"
+)
+
+
+def parse_cors_config(raw: str) -> Tuple[List[str], Optional[str]]:
+    """Split ALLOWED_ORIGINS into exact origins and regex patterns (* wildcards)."""
+    origins: List[str] = []
+    patterns: List[str] = []
+    for item in raw.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if "*" in item:
+            patterns.append("^" + re.escape(item).replace(r"\*", ".*") + "$")
+        else:
+            origins.append(item)
+    origin_regex = "|".join(patterns) if patterns else None
+    return origins, origin_regex
+
+
+allowed_raw = os.getenv("ALLOWED_ORIGINS", default_origins)
+cors_origins, cors_origin_regex = parse_cors_config(allowed_raw)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in allowed_origins if o.strip()],
+    allow_origins=cors_origins,
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

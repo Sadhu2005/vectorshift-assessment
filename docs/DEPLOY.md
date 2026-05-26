@@ -31,7 +31,8 @@
 5. **Build:** `pip install -r requirements.txt`
 6. **Start:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
 7. **Environment:**
-   - `ALLOWED_ORIGINS` = `https://your-app.vercel.app,http://localhost:3000`
+   - `ALLOWED_ORIGINS` = `https://your-app.vercel.app,https://*.vercel.app,http://localhost:3000`  
+     (`*` wildcards are supported — required for Vercel preview URLs like `vecter-xxx.vercel.app`)
 
 Or deploy via Blueprint: `backend/render.yaml`.
 
