@@ -68,7 +68,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          REACT_APP_API_URL: ${{ github.ref_name == 'main' && (secrets.REACT_APP_API_URL_PRODUCTION || vars.REACT_APP_API_URL_PRODUCTION) || (secrets.REACT_APP_API_URL_STAGING || vars.REACT_APP_API_URL_STAGING) || secrets.REACT_APP_API_URL || vars.REACT_APP_API_URL || 'http://localhost:8000' }}
+          # E2E runs against a local uvicorn in CI; bake the local API URL into the build artifact used by Playwright.
+          # (Deploy step separately rebuilds with the Render URL for Vercel.)
+          REACT_APP_API_URL: http://127.0.0.1:8000
           CI: true
       - uses: actions/upload-artifact@v4
         with:
