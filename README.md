@@ -2,6 +2,20 @@
 
 VectorShift-style workflow builder: design node pipelines on a canvas, save or import graphs, and validate structure (node count, edge count, DAG) via FastAPI.
 
+## Screenshots
+
+### Editor canvas
+
+![Pipeline editor canvas](snapshots/ui-pipeline-editor-canvas.png)
+
+### Submit result (backend validation)
+
+![Submit success alert](snapshots/ui-submit-success-alert.png)
+
+### Mobile experience (portrait → landscape)
+
+![Rotate to landscape gate](snapshots/mobile-rotate-to-landscape.png)
+
 ## Repository structure
 
 ```
