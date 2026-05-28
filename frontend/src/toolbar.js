@@ -10,10 +10,20 @@ const tabs = [
 const MIN_WIDTH = 220;
 const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 300;
+const MOBILE_DEFAULT_WIDTH = 200;
+const MOBILE_MIN_WIDTH = 160;
+
+const getInitialWidth = () => {
+  if (typeof window === 'undefined') return DEFAULT_WIDTH;
+  const mobile =
+    window.matchMedia('(max-width: 896px)').matches ||
+    (window.innerWidth <= 896 && 'ontouchstart' in window);
+  return mobile ? MOBILE_DEFAULT_WIDTH : DEFAULT_WIDTH;
+};
 
 export const PipelineToolbar = () => {
   const [activeTab, setActiveTab] = useState('templates');
-  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [width, setWidth] = useState(getInitialWidth);
   const [isResizing, setIsResizing] = useState(false);
 
   const startResize = useCallback((e) => {
@@ -24,8 +34,13 @@ export const PipelineToolbar = () => {
   useEffect(() => {
     if (!isResizing) return;
 
+    const minW =
+      window.innerWidth <= 896 && 'ontouchstart' in window
+        ? MOBILE_MIN_WIDTH
+        : MIN_WIDTH;
+
     const onMove = (e) => {
-      setWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, e.clientX)));
+      setWidth(Math.min(MAX_WIDTH, Math.max(minW, e.clientX)));
     };
     const onUp = () => setIsResizing(false);
 
