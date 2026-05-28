@@ -94,7 +94,11 @@ class TestParsePipeline:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data == {"num_nodes": 3, "num_edges": 2, "is_dag": True}
+        assert data["num_nodes"] == 3
+        assert data["num_edges"] == 2
+        assert data["is_dag"] is True
+        assert data["isolated_nodes"] == []
+        assert data["missing_required_inputs"] == {}
 
     def test_cycle_returns_not_dag(self):
         response = self._post(
@@ -107,6 +111,29 @@ class TestParsePipeline:
         )
         assert response.status_code == 200
         assert response.json()["is_dag"] is False
+
+    def test_single_unconnected_node_is_dag_but_isolated(self):
+        response = self._post(
+            [{"id": "note-1", "type": "note"}, {"id": "api-1", "type": "api"}],
+            [],
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_dag"] is True
+        # note nodes are ignored for isolation; api-1 is isolated
+        assert data["isolated_nodes"] == ["api-1"]
+
+    def test_missing_required_inputs_detected(self):
+        # customOutput requires a connection into {id}-value
+        response = self._post(
+            [{"id": "customOutput-1", "type": "customOutput"}],
+            [],
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["missing_required_inputs"] == {
+            "customOutput-1": ["customOutput-1-value"]
+        }
 
     def test_empty_pipeline_rejected(self):
         response = self._post([], [])

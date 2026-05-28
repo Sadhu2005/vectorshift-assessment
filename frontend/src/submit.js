@@ -27,11 +27,32 @@ export const formatPipelineAlert = (data) => {
     ? 'Yes — this pipeline is a valid DAG (no cycles).'
     : 'No — this pipeline has a cycle. Remove circular connections.';
 
+  const warnings = [];
+  if (Array.isArray(data.isolated_nodes) && data.isolated_nodes.length > 0) {
+    warnings.push(
+      `Isolated nodes (not connected): ${data.isolated_nodes.join(', ')}`
+    );
+  }
+  if (
+    data.missing_required_inputs &&
+    typeof data.missing_required_inputs === 'object'
+  ) {
+    const entries = Object.entries(data.missing_required_inputs);
+    if (entries.length > 0) {
+      const lines = entries.map(
+        ([nodeId, handles]) =>
+          `${nodeId}: missing ${Array.isArray(handles) ? handles.join(', ') : String(handles)}`
+      );
+      warnings.push(`Missing required inputs:\n${lines.join('\n')}`);
+    }
+  }
+
   return (
     'Pipeline analysis\n\n' +
     `Number of nodes: ${data.num_nodes}\n` +
     `Number of edges: ${data.num_edges}\n` +
-    `Is DAG: ${dagLine}`
+    `Is DAG: ${dagLine}` +
+    (warnings.length ? `\n\nWarnings\n${warnings.join('\n\n')}` : '')
   );
 };
 

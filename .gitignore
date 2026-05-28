@@ -51,3 +51,4 @@ yarn-error.log*
 
 # Assessment / local-only (do not commit)
 *.pdf
+docs/RECORDING_SCRIPT.md
