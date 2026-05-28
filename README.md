@@ -2,6 +2,10 @@
 
 VectorShift-style workflow builder: design node pipelines on a canvas, save or import graphs, and validate structure (node count, edge count, DAG) via FastAPI.
 
+## Live demo
+
+- **Vercel app**: `https://vecter-btcex67yd-sadhu2005s-projects.vercel.app/`
+
 ## Screenshots
 
 ### Editor canvas
